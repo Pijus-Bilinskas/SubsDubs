@@ -47,43 +47,44 @@ const subscriptionSchema = new mongoose.Schema({
     },
     renewalDate: {
         type: Date,
-        required: true,
         validate: {
-            validator: function (value) {
-                return value > this.startDate;
-            },
-            message: 'Renewal date must be after the start date',
+          validator: function (value) {
+            return value > this.startDate;
+          },
+          message: 'Renewal date must be after the start date',
         }
-    },
-    user: {
+      },
+      user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
         required: true,
         index: true,
-    }
-}, {timestamps: true});
-
-// Automatically calculates renewal date if missing
-subscriptionSchema.pre('save', function() {
-    if(!this.renewalDate){
+      }
+    }, { timestamps: true });
+    
+    
+    // Auto-calculate renewal date if missing.
+    subscriptionSchema.pre('save', function (next) {
+      if(!this.renewalDate) {
         const renewalPeriods = {
-            daily: 1,
-            weekly: 7,
-            monthly: 30,
-            yearly: 365,
+          daily: 1,
+          weekly: 7,
+          monthly: 30,
+          yearly: 365,
         };
-
+    
         this.renewalDate = new Date(this.startDate);
-        this.renewalDate.setDate(this.renewalDate.getDate() + renewalPeriods[this.frequency])
-    }
-
-    // auto-update the status if renewal date has passed
-    if(this.renewalDate < new Date()) {
+        this.renewalDate.setDate(this.renewalDate.getDate() + renewalPeriods[this.frequency]);
+      }
+    
+      // Auto-update the status if renewal date has passed
+      if (this.renewalDate < new Date()) {
         this.status = 'expired';
-    }
-
-    next();
-});
-
-const Subscription = mongoose.model('Subscription', subscriptionSchema);
-export default Subscription;
+      }
+    
+      next();
+    });
+    
+    const Subscription = mongoose.model('Subscription', subscriptionSchema);
+    
+    export default Subscription;
